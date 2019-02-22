@@ -479,6 +479,10 @@ int main( int argc, char *argv[])
        else 
          printf( "| 2 |[%s]", pathpan[ 2 ] );
 
+       ansigotoyx( 2, 0 );
+       int chr; 
+       for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
+
        chdir( pathpan[ 1 ] );
        if ( viewpan[ 1 ] == 1 ) 
           printdir( 0, 0,       "." , 1 );
