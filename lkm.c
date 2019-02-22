@@ -335,6 +335,9 @@ void strninput( char *mytitle, char *foostr )
          else if ( ch == 127 ) 
             strncpy( strmsg, strcut( strmsg, 1 , strlen( strmsg ) -1 )  ,  PATH_MAX );
 
+         else if ( ch == 8 ) 
+            strncpy( strmsg, strcut( strmsg, 1 , strlen( strmsg ) -1 )  ,  PATH_MAX );
+
 	 else if (
 			(( ch >= 'a' ) && ( ch <= 'z' ) ) 
 		        || (( ch >= 'A' ) && ( ch <= 'Z' ) ) 
@@ -497,13 +500,14 @@ int main( int argc, char *argv[])
             nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
             strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
        }
+
        else if ( ch == 'm')      
        {
             chdir( pathpan[ pansel ] );
             strncpy( pathpile , getcwd( cwd, PATH_MAX ), PATH_MAX );
        }
 
-       else if ( ( ch == '#')  || ( ch == '\'')  )
+       else if ( ( ch == '#')  || ( ch == '\'')  || ( ch == 'p' ) )
        {
             chdir( pathpan[ pansel ] );
             chdir( pathpile );
@@ -564,6 +568,7 @@ int main( int argc, char *argv[])
        else if ( ch == 'n')      nexp_user_scrolly[pansel]+=4;
        else if ( ch == 't' )     printf("%syellow\n", KYEL);
        else if ( ch == 'T' )     printf("%sgreen\n", KGRN);
+       else if ( ch == 246 )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
        else if ( ch == 'r' )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
        else if ( ch == '3' )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
        else if ( ch == 'v' )   {  enable_waiting_for_enter();  nrunwith(  " vim  ",  nexp_user_fileselection    );   }
@@ -630,6 +635,12 @@ int main( int argc, char *argv[])
             printf("\n" );
             printf("\n" );
             printf("got: \"%s\"\n", string );
+            if ( strcmp( string, "key" ) == 0 )  
+            {
+                 clear_screen_retro();
+                 ch = getchar();
+                 printf( "\nKEY %d %c\n", ch , ch );
+            }
             getchar();
         }
 
