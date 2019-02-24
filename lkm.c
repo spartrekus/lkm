@@ -36,6 +36,10 @@
 #include <unistd.h>  
 #include <time.h>
 
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 
 
 
@@ -278,6 +282,9 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
    //mvprintw( rows-1, cols/2, "[FILE: %s]", nexp_user_fileselection );
 }
 
+
+
+
 ////////////////////////////////////////////////////////////////////
 char *strcut( char *str , int myposstart, int myposend )
 {     // copyleft, C function made by Spartrekus 
@@ -390,7 +397,6 @@ void strninput( char *mytitle, char *foostr )
 int main( int argc, char *argv[])
 {
 
-
     ////////////////////////////////////////////////////////
     char cwd[PATH_MAX];
     char pathbefore[PATH_MAX];
@@ -398,6 +404,8 @@ int main( int argc, char *argv[])
     strncpy( pathbefore , getcwd( cwd, PATH_MAX ) , PATH_MAX );
     strncpy( pathpile , getcwd( cwd, PATH_MAX ) , PATH_MAX );
     char pathpan[5][PATH_MAX];
+    char string[PATH_MAX];
+    char clipboard_path[PATH_MAX];
     ////////////////////////////////////////////////////////
     if ( argc == 2)
     if ( strcmp( argv[1] , "" ) !=  0 )
@@ -406,6 +414,8 @@ int main( int argc, char *argv[])
           chdir( argv[ 1 ] );
           strncpy( pathpan[ 1 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
           strncpy( pathpan[ 2 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+          strncpy( pathpan[ 3 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+          strncpy( pathpan[ 4 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
     }
 
 
@@ -416,14 +426,21 @@ int main( int argc, char *argv[])
     nexp_user_sel[2] = 1;
     nexp_user_scrolly[1] = 0;
     nexp_user_scrolly[2] = 0;
+    nexp_user_sel[3] = 1;
+    nexp_user_sel[4] = 1;
+    nexp_user_scrolly[3] = 0;
+    nexp_user_scrolly[4] = 0;
     strncpy( pathpan[ 1 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
     strncpy( pathpan[ 2 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+    strncpy( pathpan[ 3 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+    strncpy( pathpan[ 4 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
     viewpan[ 1 ] = 1;
     viewpan[ 2 ] = 1;
+    viewpan[ 3 ] = 0;
+    viewpan[ 4 ] = 0;
 
     struct winsize w; // need ioctl and unistd 
     ioctl( STDOUT_FILENO, TIOCGWINSZ, &w );
-    char string[PATH_MAX];
     ////////////////////////////////////////////////////////
     if ( argc == 2)
     if ( strcmp( argv[1] , "-s" ) ==  0 ) 
@@ -454,12 +471,12 @@ int main( int argc, char *argv[])
     {
        printf("%syellow\n", KYEL);
        printf( "PATH1:%s\n",  pathpan[ 1 ] );
-       printf( "PATH2:%s\n", pathpan[ 2 ] );
+       printf( "PATH2:%s\n",  pathpan[ 2 ] );
        //return 0;
     }
     int ch ; 
+    int chr; 
     int gameover = 0;
-    
 
     while ( gameover == 0 ) 
     {
@@ -467,31 +484,64 @@ int main( int argc, char *argv[])
        disable_waiting_for_enter();
        clear_screen();
 
-       ansigotoyx( 0, 0 );
-       if ( pansel == 1 )
-         printf( "|*1 |[%s]", pathpan[ 1 ] );
-       else 
-         printf( "| 1 |[%s]", pathpan[ 1 ] );
+//       ansigotoyx( 0, 0 );
+//       for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
+//       ansigotoyx( 1, 0 );
+//       for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
+//
+//       ansigotoyx( 0, 0 );
+//       if ( pansel == 1 )
+//         printf( "|*1 |[%s]", pathpan[ 1 ] );
+//       else 
+//         printf( "| 1 |[%s]", pathpan[ 1 ] );
+//
+//       ansigotoyx( 0, cols/2 );
+//       if ( pansel == 2 )
+//         printf( "|*2 |[%s]", pathpan[ 2 ] );
+//       else 
+//         printf( "| 2 |[%s]", pathpan[ 2 ] );
 
-       ansigotoyx( 0, cols/2 );
-       if ( pansel == 2 )
-         printf( "|*2 |[%s]", pathpan[ 2 ] );
-       else 
-         printf( "| 2 |[%s]", pathpan[ 2 ] );
-
+       ansigotoyx( 1, 0 );
+       for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
        ansigotoyx( 2, 0 );
-       int chr; 
        for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
 
-       chdir( pathpan[ 1 ] );
        if ( viewpan[ 1 ] == 1 ) 
+       if ( viewpan[ 3 ] == 0 ) 
+       {
+          ansigotoyx( 0, 0 );
+          printf( "| 1 |[%s]", pathpan[ 1 ] );
+          chdir( pathpan[ 1 ] );
           printdir( 0, 0,       "." , 1 );
-       chdir( pathpan[ 2 ] );
+       }
+
        if ( viewpan[ 2 ] == 1 ) 
+       if ( viewpan[ 4 ] == 0 ) 
+       {
+          ansigotoyx( 0, cols/2 );
+          printf( "| 2 |[%s]", pathpan[ 2 ] );
+          chdir( pathpan[ 2 ] );
           printdir( 0, cols/2,  "." , 2 );
+       }
+
+       if ( viewpan[ 3 ] == 1 ) 
+       {
+          ansigotoyx( 0, 0 );
+          printf( "| 3 |[%s]", pathpan[ 3 ] );
+          chdir( pathpan[ 3 ] );
+          printdir( 0, 0,      "." , 3 );
+       }
+
+       if ( viewpan[ 4 ] == 1 ) 
+       {
+          ansigotoyx( 0, cols/2 );
+          printf( "| 4 |[%s]", pathpan[ 4 ] );
+          chdir( pathpan[ 4 ] );
+          printdir( 0, cols/2,  "." , 4 );
+       }
 
        ansigotoyx( rows-1, 0 );
-       printf( "|F|%d|[%s]", nexp_user_sel[pansel] ,  nexp_user_fileselection );
+       printf( "|P%d|F|%d|[%s]", pansel, nexp_user_sel[pansel] ,  nexp_user_fileselection );
        ch = getchar();
 
        chdir( pathpan[ pansel ] );
@@ -503,6 +553,13 @@ int main( int argc, char *argv[])
             chdir( pathbefore );
             nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
             strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+       }
+
+       else if ( ch == 'y')      
+       {
+            chdir( pathpan[ pansel ] );
+            strncpy( clipboard_path , getcwd( cwd, PATH_MAX ), PATH_MAX );
+            strncpy( pathpile , getcwd( cwd, PATH_MAX ), PATH_MAX );
        }
 
        else if ( ch == 'm')      
@@ -564,31 +621,77 @@ int main( int argc, char *argv[])
             nexp_user_scrolly[ 1 ] = 0; 
             strncpy( pathpan[ 1 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
        }
+       else if ( ( ch == 'o') && ( pansel == 3 )   )
+       {
+            chdir( pathpan[ 3 ] );
+            chdir( nexp_user_fileselection );
+            nexp_user_sel[ 4 ] = 1; 
+            nexp_user_scrolly[ 4 ] = 0; 
+            strncpy( pathpan[ 4 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+       }
+       else if ( ( ch == 'o') && ( pansel == 4 )   )
+       {
+            chdir( pathpan[ 4 ] );
+            chdir( nexp_user_fileselection );
+            nexp_user_sel[ 3 ] = 1; 
+            nexp_user_scrolly[ 3 ] = 0; 
+            strncpy( pathpan[ 3 ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+       }
        else if ( ch == 'k')      nexp_user_sel[pansel]--;
        else if ( ch == 'j')      nexp_user_sel[pansel]++;
        else if ( ch == 'g')      { nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; }
        else if ( ch == 'u')      nexp_user_scrolly[pansel]-=4;
        else if ( ch == 'd')      nexp_user_scrolly[pansel]+=4;
        else if ( ch == 'n')      nexp_user_scrolly[pansel]+=4;
+
+
        else if ( ch == 't' )     printf("%syellow\n", KYEL);
-       else if ( ch == 'T' )     printf("%sgreen\n", KGRN);
+       else if ( ch == 'T' )     printf("%sgreen\n",  KGRN);
+       else if ( ch == 'C' )     printf("%scyan\n",   KCYN);
+
+
+
        else if ( ch == 246 )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
        else if ( ch == 'r' )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
-       else if ( ch == '3' )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
        else if ( ch == 'v' )   {  enable_waiting_for_enter();  nrunwith(  " vim  ",  nexp_user_fileselection    );   }
-       else if ( ch == '4' )   {  enable_waiting_for_enter();  nrunwith(  " vim  ",  nexp_user_fileselection    );   }
        else if ( ch == 'e' )   {  enable_waiting_for_enter();  nrunwith(  "  tless  ",  nexp_user_fileselection    );   }
        else if ( ch == 'z' )   {  enable_waiting_for_enter();  nrunwith(  " less  ",  nexp_user_fileselection    );   }
        else if ( ch == '0' )
-       {  viewpan[ 1 ] = 0;  viewpan[ 2 ] = 0; }
+       {  viewpan[ 1 ] = 0;  viewpan[ 2 ] = 0; 
+          viewpan[ 3 ] = 0;  viewpan[ 4 ] = 0; 
+          pansel = 0; 
+       }
+
        else if ( ch == '1' )
-       {  if ( viewpan[ 1 ] == 1 )   viewpan[ 1 ] = 0; else viewpan[ 1 ] = 1; }
+       {  if ( viewpan[ 1 ] == 1 )   viewpan[ 1 ] = 0; else viewpan[ 1 ] = 1; 
+          pansel = 1;
+       }
        else if ( ch == '2' )
-       { if ( viewpan[ 2 ] == 1 )    viewpan[ 2 ] = 0; else viewpan[ 2 ] = 1; }
-       else if ( ch == 9 )
-       {  if ( pansel == 1 )   pansel = 2 ; else pansel = 1; }
-       else if ( ch == 'i' )
-       {  if ( pansel == 1 )   pansel = 2 ; else pansel = 1; }
+       { if ( viewpan[ 2 ] == 1 )    viewpan[ 2 ] = 0; else viewpan[ 2 ] = 1; 
+         pansel = 2;
+       }
+       else if ( ch == '3' )
+       { if ( viewpan[ 3 ] == 1 )    viewpan[ 3 ] = 0; else viewpan[ 3 ] = 1; 
+         pansel = 3;
+       }
+       else if ( ch == '4' )
+       { if ( viewpan[ 4 ] == 1 )    viewpan[ 4 ] = 0; else viewpan[ 4 ] = 1; 
+         pansel = 4;
+       }
+
+       else if ( ( ch == 'i' ) || ( ch == 9 )) 
+       {  if      ( pansel == 1 )  
+             pansel = 2 ; 
+          else if ( pansel == 2 )  
+             pansel = 1 ; 
+          else if ( pansel == 3 )  
+             pansel = 4 ; 
+          else if ( pansel == 4 )  
+             pansel = 3 ; 
+          else 
+            pansel = 1; 
+          viewpan[ pansel ] = 1;
+       }
 
        else if ( ch == '?') 
        {
@@ -624,8 +727,16 @@ int main( int argc, char *argv[])
             printf( " \n" );
             printf("PATH2: %s \n", pathpan[ 2 ] );
             printf( " \n" );
-            printf("PATH PILE: %s", pathpile );
+            printf("PATH3: %s \n", pathpan[ 3 ] );
             printf( " \n" );
+            printf("PATH4: %s \n", pathpan[ 4 ] );
+            printf( " \n" );
+
+            printf("|PATH PILE: %s|", pathpile );
+            printf( "\n" );
+            printf( "\n" );
+            printf("|PATH CLIP: %s|", clipboard_path );
+            printf( "\n" );
             getchar();
             disable_waiting_for_enter();
         }
