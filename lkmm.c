@@ -68,6 +68,16 @@ int  mode_user_colorscheme = 0;
 
 
 
+void gfxhline( int y1 , int x1 , int x2 , int mychar )
+{
+    int foo, fooy , foox ;
+    foo = x1;
+    ansigotoyx( y1 , x1 );  
+    for( foox = x1 ; foox <= x2 ; foox++) 
+         printf( "%c", mychar );
+}
+
+
 
 
 void gfxrectangle( int y1, int x1, int y2, int x2 )
@@ -82,6 +92,17 @@ void gfxrectangle( int y1, int x1, int y2, int x2 )
           printf( "." );
     }
 }
+
+
+void printatl( int y1, int x1,  int mylength, char *mystring )
+{
+    int foo, fooy , foox ;
+    foo = x1;
+    ansigotoyx( y1 , x1 );  
+    for( foox = 0 ; foox <= mylength ; foox++) 
+         printf( "%c", mystring[ foox ] );
+}
+
 
 void printat( int y1, int x1, char *mystring )
 {
@@ -302,9 +323,11 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
         if ( entrycounter <= nexp_user_scrolly[panviewpr] )
               continue;
 
-        if (  dp->d_name[0] !=  '.' ) 
-        if (  strcmp( dp->d_name, "." ) != 0 )
-        if (  strcmp( dp->d_name, ".." ) != 0 )
+        //if (  dp->d_name[0] !=  '.' ) 
+        //if (  strcmp( dp->d_name, "." ) != 0 )
+        //if (  strcmp( dp->d_name, ".." ) != 0 )
+        //if ( (  dp->d_name[0] !=  '.' ) || (  strcmp( dp->d_name, ".." ) != 0 ))
+        if ( (  strcmp( dp->d_name, ".." ) == 0 ) || (  dp->d_name[0] !=  '.' ) )
         {
             posy++;  fooselection++;
             if ( dp->d_type == DT_DIR ) 
@@ -489,8 +512,10 @@ int main( int argc, char *argv[])
     strncpy( pathpile , getcwd( cwd, PATH_MAX ) , PATH_MAX );
     char pathpan[5][PATH_MAX];
     char string[PATH_MAX];
+    char cmdi[PATH_MAX];
     char clipboard_path[PATH_MAX];
     int fooi;
+    int foo;
     ////////////////////////////////////////////////////////
     if ( argc == 2)
     if ( strcmp( argv[1] , "" ) !=  0 )
@@ -585,17 +610,19 @@ int main( int argc, char *argv[])
        if ( viewpan[ 1 ] == 1 ) 
        if ( viewpan[ 3 ] == 0 ) 
        {
-          ansigotoyx( 0, 0 );
-          printf( "| 1 |[%s]", pathpan[ 1 ] );
+          snprintf( string , PATH_MAX , "| 1 |[%s]", pathpan[  1  ] );
+          printatl( 0 , 0 ,  cols / 2 - 4, string );
           chdir( pathpan[ 1 ] );
-          printdir( 0, 0,       "." , 1 );
+          printdir( 0, 0, "." , 1 );
        }
 
        if ( viewpan[ 2 ] == 1 ) 
        if ( viewpan[ 4 ] == 0 ) 
        {
-          ansigotoyx( 0, cols/2 );
-          printf( "| 2 |[%s]", pathpan[ 2 ] );
+          //ansigotoyx( 0, cols/2 );
+          //printf( "| 2 |[%s]", pathpan[ 2 ] );
+          snprintf( string , PATH_MAX , "| 2 |[%s]", pathpan[  2  ] );
+          printatl( 0 , cols/2 ,  cols / 2 - 4, string );
           chdir( pathpan[ 2 ] );
           printdir( 0, cols/2,  "." , 2 );
        }
@@ -618,11 +645,14 @@ int main( int argc, char *argv[])
 
        ansigotoyx( rows-1, 0 );
        printf( "|P%d|F|%d|[%s]", pansel, nexp_user_sel[pansel] ,  nexp_user_fileselection );
+
+       ansigotoyx( rows, 0 );
+       printf( "|(hjkl):Select| |(c-o):chdir| |(c-f):File Op.| |(Q)uit| |(q)uick menu|" );
+
        ch = getchar();
 
        chdir( pathpan[ pansel ] );
-       if (ch ==  'Q')      gameover = 1;
-       else if ( ch == '/')      
+       if ( ch == '/')      
        {
             chdir( pathpan[ pansel ] );
             chdir( pathbefore );
@@ -792,12 +822,15 @@ int main( int argc, char *argv[])
             getchar();
         }
 
-       else if ( ch == 'q') 
+
+
+
+       else if ( ch == 'Q') 
        {
             set_display_attrib( 7 );
             gfxrectangle( rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
             gfxframe(     rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
-            mvcenter(     rows*30/100, "|MENU APPS|");
+            mvcenter(     rows*30/100, "|MENU FILE|");
             fooi = 1;
             printat(   rows*30/100 +fooi++ , cols*30/100+1 , "y: Quit ");
             printat(   rows*30/100 +fooi++ , cols*30/100+1 , "n: Abort ");
@@ -813,23 +846,38 @@ int main( int argc, char *argv[])
 
 
 
-       else if ( ch == 'a') 
+       else if ( ch == 'q') 
        {
             set_display_attrib( 7 );
             gfxrectangle( rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
             gfxframe(     rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
-            mvcenter(     rows*30/100, "|MENU APPS|");
+            mvcenter(     rows*30/100, "|QUICK APPS|");
             fooi = 1;
-            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "1: ndesk ");
-            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "2: vim ");
-            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "3: naclock ");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "1: naclock ");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "2: nclock ");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "3: vim ");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "4: ndesk ");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "5: links ");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "----------");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "w: workspace ");
+
             ansigotoyx(  rows*70/100 , cols*70/100 );
             ch = getchar();
             set_display_attrib( 0 );
             ansigotoyx( rows-1, 0 );
-            if      ( ch == '1' ) nsystem( " ndesk  " ); 
-            else if ( ch == '2' ) nsystem( " vim    " ); 
-            else if ( ch == '3' ) nsystem( " naclock    " ); 
+            if      ( ch == '1' ) nsystem( " naclock  " ); 
+            else if ( ch == '2' ) nsystem( " nclock    " ); 
+            else if ( ch == '3' ) nsystem( " vim    " ); 
+            else if ( ch == '4' ) nsystem( " ndesk    " ); 
+            else if ( ch == '5' ) nsystem( " links www.duckduckgo.com " ); 
+            else if ( ch == 'w' ) 
+            {
+                      chdir( pathpan[ pansel ] );
+                      chdir( getenv( "HOME"  ) );
+                      chdir( "workspace" );
+                      nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
+                      strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+            }
             ch = 0;
             set_display_attrib( 0 );
         }
@@ -878,17 +926,47 @@ int main( int argc, char *argv[])
             printf("\n" );
             printf("\n" );
             printf("got: \"%s\"\n", string );
-            if ( strcmp( string, "key" ) == 0 )  
+            if ( strcmp( string, "lkmm" ) == 0 )  
             {
-                 //clear_screen_retro();
+                 nsystem( " lkmm " );
+            }
+            else if ( strcmp( string, "key" ) == 0 )  
+            {
                  ch = getchar();
                  printf( "\nKEY %d %c\n", ch , ch );
             }
             else if ( strcmp( string, "rect" ) == 0 )  
+            {
                gfxrectangle( rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
+            }
             getchar();
         }
 
+        else if ( ch == 6 ) 
+        {
+            set_display_attrib( 7 );
+            gfxrectangle( rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
+            gfxframe(     rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
+            mvcenter(     rows*30/100, "|MENU FILE OP.|");
+            set_display_attrib( 0 );
+            getchar();
+        }
+
+        else if ( ch == 15 ) 
+        {
+           strninput( " Change Directory (chdir) ", "" );
+           strncpy( string, userstr , PATH_MAX );
+           printf("\n" );
+           printf("\n" );
+           printf("got: \"%s\"\n", string );
+           if ( strcmp( string , "" ) != 0 )
+           {
+               chdir( pathpan[ pansel ] );
+               chdir( string ) ; 
+               nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
+               strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+           }
+        }
 
         else if (ch == '7') 
         {
@@ -899,6 +977,36 @@ int main( int argc, char *argv[])
             printf("got: \"%s\"\n", string );
             if ( strcmp( string , "" ) != 0 ) nrunwith( " mkdir " , string ) ; 
         }
+
+
+        else if ( ch == '6') 
+        {
+                   chdir( pathpan[ pansel ] );
+                   strncpy( cmdi, " mv   " , PATH_MAX );
+                   strncat( cmdi , " \"" , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi ,   nexp_user_fileselection  , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , "\" " , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , "  " , PATH_MAX - strlen(cmdi) - 1);
+                   if ( pansel == 2 ) foo = 1; else if ( pansel == 1 ) foo = 2; 
+                   strncat( cmdi , " \"" , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , pathpan[ foo ] ,  PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , "\" " , PATH_MAX - strlen(cmdi) - 1);
+                   ansigotoyx( rows, 0 );
+                   gfxhline( rows , 0 , cols-1, ' '); 
+                   ansigotoyx( rows-1, 0 );
+                   gfxhline( rows-1 , 0 , cols-1 , ' ' ); 
+                   ansigotoyx( rows, 0 );
+                   gfxhline(  rows-1 , 0 , cols-1 , '=' ); 
+                   printf( "CMD: %s [y/n]?\n" ,  cmdi );
+                   printf( "Answer: Yes or No [y/n]?\n" );
+                   printf( "=========================\n" );
+                   foo = getchar();
+                   if ( ( foo == '1' ) || ( foo == 'y' ) )
+                      nsystem( cmdi );
+        }
+
+
+
 
 
         else if (ch == '!') 

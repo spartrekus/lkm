@@ -406,6 +406,7 @@ int main( int argc, char *argv[])
     char pathpan[5][PATH_MAX];
     char string[PATH_MAX];
     char clipboard_path[PATH_MAX];
+
     ////////////////////////////////////////////////////////
     if ( argc == 2)
     if ( strcmp( argv[1] , "" ) !=  0 )
