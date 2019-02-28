@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <sys/ioctl.h>
 #include <time.h>
+#include <errno.h>
 
 #include <stdlib.h>
 #include <dirent.h>
@@ -296,6 +297,24 @@ void disable_waiting_for_enter(void)
 
 
 
+void printtypes( char *mydir )
+{
+   DIR *dirp; 
+   struct dirent *dp;
+   dirp = opendir( mydir  );
+   while  ((dp = readdir( dirp )) != NULL ) 
+   {
+        printf("%s", KNRM );
+        //if ( entrycounter <= nexp_user_scrolly[panviewpr] )
+        //      continue;
+        //if ( dp->d_type == DT_DIR ) 
+        printf( "%d %s\n" , dp->d_type, dp->d_name ) ;
+   }
+   closedir( dirp );
+}
+
+
+
 /////////////////////////
 /////////////////////////
 int  nexp_user_sel[5] ; 
@@ -311,47 +330,40 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
    int fooselection = 0;
    posy = 1; posx = cols/2;
    char cwd[PATH_MAX];
+   char path[PATH_MAX];
    struct dirent *dp;
    dirp = opendir( mydir  );
    int entrycounter = 0;
    fooselection = 0;
-   while  ((dp = readdir( dirp )) != NULL ) 
-   if ( posy <= rows-3 )
+
+   struct stat info;
+
+   while ((dp = readdir(dirp)) != NULL) 
    {
-        //printf("%s\n", KYEL);
-        entrycounter++;
-        if ( entrycounter <= nexp_user_scrolly[panviewpr] )
+      if ( posy <= rows-3 )
+      { 
+
+      entrycounter++;
+      if ( entrycounter <= nexp_user_scrolly[panviewpr] )
               continue;
 
-        //if (  dp->d_name[0] !=  '.' ) 
-        //if (  strcmp( dp->d_name, "." ) != 0 )
-        //if (  strcmp( dp->d_name, ".." ) != 0 )
-        //if ( (  dp->d_name[0] !=  '.' ) || (  strcmp( dp->d_name, ".." ) != 0 ))
-        if ( (  strcmp( dp->d_name, ".." ) == 0 ) || (  dp->d_name[0] !=  '.' ) )
+      if (dp->d_name[0] != '.') 
+      {
+        printf("%s", KNRM);
+        posy++; fooselection++;
+
+        strcpy(path, mydir );
+        strcat(path, "/");
+        strcat(path, dp->d_name);
+
+        if (stat(path, &info) != 0)
+          fprintf(stderr, "stat() error on %s: %s\n", path, strerror(errno));
+
+        else if (S_ISDIR(info.st_mode))
         {
-            posy++;  fooselection++;
-            if ( dp->d_type == DT_DIR ) 
-            {
-                 //color_set( 3 , NULL );
-                 //mvaddch( posy, posx++ , '/' );
-                 //printf( "/" );
-                 ansigotoyx( posy, pxx );
-                 printf( "/" );
-                 posx++;
-            }
-            else if ( dp->d_type == 0 )
-            {
-               if ( tc_det_dir_type == 1 )
-               if ( fexist( dp->d_name ) == 2 )
-               {
-                 //color_set( 3 , NULL );
-                 //mvaddch( posy, posx++ , '/' );
-                 //printf( "/" );
-                 ansigotoyx( posy, pxx );
-                 printf( "/" );
-                 posx++;
-               }
-            }
+               //traverse(path, indent+1);
+                printf("%s", KYEL);
+        }
 
             ansigotoyx( posy, pxx-1 );
             if ( nexp_user_sel[ panviewpr ] == fooselection ) 
@@ -365,6 +377,7 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
             }
             else 
                   printf( " " );
+
 
             ansigotoyx( posy, pxx );
             for ( chr = 0 ;  chr <= strlen(dp->d_name) ; chr++) 
@@ -382,11 +395,11 @@ void printdir( int pyy, int fopxx, char *mydir , int panviewpr )
                  posx++;
               }
             }
-        }
+
+         }
+       }
    }
-   closedir( dirp );
-   // color_set( 0, NULL ); attroff( A_REVERSE );
-   //mvprintw( rows-1, cols/2, "[FILE: %s]", nexp_user_fileselection );
+   printf("%s", KNRM );
 }
 
 
@@ -501,6 +514,47 @@ void strninput( char *mytitle, char *foostr )
 
 
 
+
+
+
+/////////////////////////////////////
+void traverse(char *fn, int indent) {
+  DIR *dir;
+  struct dirent *entry;
+  int count;
+  char path[1025]; /*** EXTRA STORAGE MAY BE NEEDED ***/
+  struct stat info;
+
+  for (count=0; count<indent; count++) printf("  ");
+  printf("%s\n", fn);
+
+  if ((dir = opendir(fn)) == NULL)
+    perror("opendir() error");
+  else {
+    while ((entry = readdir(dir)) != NULL) 
+    {
+      if (entry->d_name[0] != '.') 
+      {
+
+        strcpy(path, fn);
+        strcat(path, "/");
+        strcat(path, entry->d_name);
+
+        if (stat(path, &info) != 0)
+          fprintf(stderr, "stat() error on %s: %s\n", path, strerror(errno));
+
+        else if (S_ISDIR(info.st_mode))
+               traverse(path, indent+1);
+      }
+    }
+    closedir(dir);
+  }
+}
+
+
+
+
+
 int main( int argc, char *argv[])
 {
 
@@ -571,6 +625,7 @@ int main( int argc, char *argv[])
     if ( argc == 3)
     if ( strcmp( argv[1] , "-f" ) ==  0 ) 
     {
+       printf("%s", KYEL);
        printf("%syellow\n", KYEL);
        readfile( argv[ 2 ] );
        return 0;
@@ -593,10 +648,11 @@ int main( int argc, char *argv[])
        strncpy( nexp_user_fileselection, "" , PATH_MAX );
        disable_waiting_for_enter();
 
-       if      ( mode_user_colorscheme == 1 )
-          printf("%syellow\n", KYEL);
-       else if ( mode_user_colorscheme == 2 )
-          printf("%sgreen\n", KGRN);
+       // not enabled to get faster
+       //if      ( mode_user_colorscheme == 1 )
+       //   printf("%syellow\n", KYEL);
+       //else if ( mode_user_colorscheme == 2 )
+       //   printf("%sgreen\n", KGRN);
 
        clear_screen();
 
@@ -606,11 +662,17 @@ int main( int argc, char *argv[])
        ansigotoyx( 2, 0 );
        for ( chr = 0 ;  chr <= cols-1 ; chr++) printf( " ");
 
+       //ansigotoyx( rows, 0 );
+       //gfxhline(  0 , 0 , cols-1 , ' ' ); 
+       //gfxhline(  1 , 0 , cols-1 , ' ' ); 
 
        if ( viewpan[ 1 ] == 1 ) 
        if ( viewpan[ 3 ] == 0 ) 
        {
-          snprintf( string , PATH_MAX , "| 1 |[%s]", pathpan[  1  ] );
+          //snprintf( string , PATH_MAX , "| 1 |[%s]", pathpan[  1  ] );
+          strncpy( string, "| 1 |[" , PATH_MAX );
+          strncat( string , pathpan[ 1 ] , PATH_MAX - strlen( string ) - 1);
+          strncat( string , "]" , PATH_MAX - strlen( string ) - 1);
           printatl( 0 , 0 ,  cols / 2 - 4, string );
           chdir( pathpan[ 1 ] );
           printdir( 0, 0, "." , 1 );
@@ -621,7 +683,10 @@ int main( int argc, char *argv[])
        {
           //ansigotoyx( 0, cols/2 );
           //printf( "| 2 |[%s]", pathpan[ 2 ] );
-          snprintf( string , PATH_MAX , "| 2 |[%s]", pathpan[  2  ] );
+          //snprintf( string , PATH_MAX , "| 2 |[%s]", pathpan[  2  ] );
+          strncpy( string, "| 2 |[" , PATH_MAX );
+          strncat( string , pathpan[ 2 ] , PATH_MAX - strlen( string ) - 1);
+          strncat( string , "]" , PATH_MAX - strlen( string ) - 1);
           printatl( 0 , cols/2 ,  cols / 2 - 4, string );
           chdir( pathpan[ 2 ] );
           printdir( 0, cols/2,  "." , 2 );
@@ -652,15 +717,8 @@ int main( int argc, char *argv[])
        ch = getchar();
 
        chdir( pathpan[ pansel ] );
-       if ( ch == '/')      
-       {
-            chdir( pathpan[ pansel ] );
-            chdir( pathbefore );
-            nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
-            strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
-       }
 
-       else if ( ch == 'y')      
+       if ( ch == 'y')      
        {
             chdir( pathpan[ pansel ] );
             strncpy( clipboard_path , getcwd( cwd, PATH_MAX ), PATH_MAX );
@@ -882,8 +940,19 @@ int main( int argc, char *argv[])
             set_display_attrib( 0 );
         }
 
+       else if ( ch == '/') 
+       {
+            strninput( "Search:", "" );
+            strncpy( string, userstr , PATH_MAX );
+            printf("\n" );
+            printf("\n" );
+            printf("got: \"%s\"\n", string );
+            if ( strcmp( string, "lkmm" ) == 0 )  
+            {
+            }
+       }
 
-       else if ( ch == 's') 
+       else if ( ( ch == 's') ||  ( ch == 'f')  )
        {
             enable_waiting_for_enter();
             clear_screen_retro();
@@ -917,6 +986,11 @@ int main( int argc, char *argv[])
             //////////////////
         }
 
+        else if ( (ch == 127 )  || (ch == 27 ) )
+        {
+                 printf( "Getchar\n" ); getchar();
+                 printf( "Getchar\n" ); getchar();
+        }
 
 
         else if (ch == ':') 
@@ -930,10 +1004,29 @@ int main( int argc, char *argv[])
             {
                  nsystem( " lkmm " );
             }
+
+            else if ( strcmp( string, "type" ) == 0 )  
+            {
+                 printtypes( pathpan[ pansel ] ); 
+                 getchar();
+            }
+
+            else if ( strcmp( string, "tra" ) == 0 )  
+            {
+                 traverse( "/etc", 0 );
+                 getchar();
+            }
+
             else if ( strcmp( string, "key" ) == 0 )  
             {
-                 ch = getchar();
-                 printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
+                 ch = getchar(); printf( "\nKEY %d %c\n", ch , ch );
             }
             else if ( strcmp( string, "rect" ) == 0 )  
             {
@@ -977,6 +1070,33 @@ int main( int argc, char *argv[])
             printf("got: \"%s\"\n", string );
             if ( strcmp( string , "" ) != 0 ) nrunwith( " mkdir " , string ) ; 
         }
+
+        else if ( ch == '5') 
+        {
+                   chdir( pathpan[ pansel ] );
+                   strncpy( cmdi, " cp   " , PATH_MAX );
+                   strncat( cmdi , " \"" , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi ,   nexp_user_fileselection  , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , "\" " , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , "  " , PATH_MAX - strlen(cmdi) - 1);
+                   if ( pansel == 2 ) foo = 1; else if ( pansel == 1 ) foo = 2; 
+                   strncat( cmdi , " \"" , PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , pathpan[ foo ] ,  PATH_MAX - strlen(cmdi) - 1);
+                   strncat( cmdi , "\" " , PATH_MAX - strlen(cmdi) - 1);
+                   ansigotoyx( rows, 0 );
+                   gfxhline( rows , 0 , cols-1, ' '); 
+                   ansigotoyx( rows-1, 0 );
+                   gfxhline( rows-1 , 0 , cols-1 , ' ' ); 
+                   ansigotoyx( rows, 0 );
+                   gfxhline(  rows-1 , 0 , cols-1 , '=' ); 
+                   printf( "CMD: %s [y/n]?\n" ,  cmdi );
+                   printf( "Answer: Yes or No [y/n]?\n" );
+                   printf( "=========================\n" );
+                   foo = getchar();
+                   if ( ( foo == '1' ) || ( foo == 'y' ) )
+                      nsystem( cmdi );
+        }
+
 
 
         else if ( ch == '6') 
