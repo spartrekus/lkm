@@ -69,6 +69,25 @@ int  mode_user_colorscheme = 0;
 
 
 
+void lsdir( char *foodir )
+{ 
+   DIR *dirp;
+   struct dirent *dp;
+   dirp = opendir( foodir );
+   while  ((dp = readdir( dirp )) != NULL ) 
+   {
+         if (  strcmp( dp->d_name, "." ) != 0 )
+         if (  strcmp( dp->d_name, ".." ) != 0 )
+             printf( "%s\n", dp->d_name );
+   }
+   closedir( dirp );
+}
+
+
+
+
+
+
 void gfxhline( int y1 , int x1 , int x2 , int mychar )
 {
     int foo, fooy , foox ;
@@ -195,6 +214,7 @@ void nrunwith( char *cmdapp, char *filesource )
 }
 
 
+
 void clear_screen_retro()
 {
     int fooi;
@@ -202,6 +222,16 @@ void clear_screen_retro()
     ioctl( STDOUT_FILENO, TIOCGWINSZ, &w );
     for ( fooi = 1 ; fooi <= w.ws_row ; fooi++ ) 
        printf( "\n" );
+    home();
+}
+
+
+void ansierase()
+{
+    int fooi;
+    struct winsize w; // need ioctl and unistd 
+    ioctl( STDOUT_FILENO, TIOCGWINSZ, &w );
+    clrscr();
     home();
 }
 
@@ -825,7 +855,6 @@ int main( int argc, char *argv[])
        else if ( ch == 246 )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
        else if ( ch == 'r' )   {  enable_waiting_for_enter();  nrunwith(  " tcview ",  nexp_user_fileselection    );   }
        else if ( ch == 'v' )   {  enable_waiting_for_enter();  nrunwith(  " vim  ",  nexp_user_fileselection    );   }
-       else if ( ch == 'e' )   {  enable_waiting_for_enter();  nrunwith(  "  tless  ",  nexp_user_fileselection    );   }
        else if ( ch == 'z' )   {  enable_waiting_for_enter();  nrunwith(  " less  ",  nexp_user_fileselection    );   }
        else if ( ch == '0' )
        {  viewpan[ 1 ] = 0;  viewpan[ 2 ] = 0; 
@@ -918,6 +947,7 @@ int main( int argc, char *argv[])
             printat(   rows*30/100 +fooi++ , cols*30/100+1 , "5: links ");
             printat(   rows*30/100 +fooi++ , cols*30/100+1 , "----------");
             printat(   rows*30/100 +fooi++ , cols*30/100+1 , "w: workspace ");
+            printat(   rows*30/100 +fooi++ , cols*30/100+1 , "e: wdisk ");
 
             ansigotoyx(  rows*70/100 , cols*70/100 );
             ch = getchar();
@@ -933,6 +963,15 @@ int main( int argc, char *argv[])
                       chdir( pathpan[ pansel ] );
                       chdir( getenv( "HOME"  ) );
                       chdir( "workspace" );
+                      nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
+                      strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
+            }
+            else if ( ch == 'e' ) 
+            {
+                      chdir( pathpan[ pansel ] );
+                      chdir( getenv( "HOME"  ) );
+                      chdir( "workspace" );
+                      chdir( "wdisk" );
                       nexp_user_sel[pansel]=1; nexp_user_scrolly[pansel] = 0; 
                       strncpy( pathpan[ pansel ] , getcwd( cwd, PATH_MAX ), PATH_MAX );
             }
@@ -1005,6 +1044,14 @@ int main( int argc, char *argv[])
                  nsystem( " lkmm " );
             }
 
+            else if ( strcmp( string, "ls" ) == 0 )  
+            {
+                 chdir( pathpan[ pansel ] ); 
+                 clear_screen();
+                 printf( "LSDIR:%s\n", pathpan[ pansel ] );
+                 lsdir( pathpan[ pansel ] );
+            }
+
             else if ( strcmp( string, "type" ) == 0 )  
             {
                  printtypes( pathpan[ pansel ] ); 
@@ -1032,6 +1079,7 @@ int main( int argc, char *argv[])
             {
                gfxrectangle( rows*30/100 , cols*30/100, rows*70/100, cols*70/100 );
             }
+            printf( "<Press Key>\n" );
             getchar();
         }
 
